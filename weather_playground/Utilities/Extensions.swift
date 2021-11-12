@@ -119,6 +119,38 @@ extension UIImageView {
         guard let url = URL(string: link) else { return }
         downloaded(from: url, contentMode: mode)
     }
+    
+    func presentBackgroundImage(with id: Int){
+        
+        func picSelector() -> String {
+            
+            switch id {
+            case 200...232:
+                return "thunder.1"
+            case 300...321:
+                return "rain.1"
+            case 500...531:
+                return "rain.2"
+            case 600...622:
+                return "snow.1"
+            case 701...781:
+                return "fog.1"
+            case 800:
+                return "clear.sky"
+            case 801:
+                return "few.clouds"
+            case 802:
+                return "heavy.clouds"
+            case 803...804:
+                return "heavy.clouds"
+            default:
+                return "clear.sky"
+            }
+        }
+        self.image = UIImage(imageLiteralResourceName: picSelector())
+    }
+    
+    
 }
 
 
@@ -129,23 +161,29 @@ extension UILabel {
     func configureDayLabel(display: String) {
         textColor = .init(white: 1, alpha: 1)
         font = .systemFont(ofSize: 18)
+        setWidth(120)
         text = display
     }
     
     func configureDayTemp(display: String) {
         font = .boldSystemFont(ofSize: 17)
         textColor = .init(white: 1, alpha: 1)
+        setWidth(50)
+        textAlignment = .center
         text = display
     }
     
+    func formatTemperature(temp: Double) -> String {
+        if temp < 100 {
+            let formattedTemp = String(format: "%.1f", temp)
+            let newTemp = "\(formattedTemp)°"
+            return newTemp
+        } else {
+            let converted = temp - 273.2
+            let formattedTemp = String(format: "%.1f", converted)
+            let newTemp = "\(formattedTemp)°"
+            return newTemp
+        }
+    }
 }
 
-extension UIImageView {
-    
-    func configureDayImage() {
-        contentMode = .scaleAspectFit
-        image = UIImage(systemName: "star.fill")
-        setHeight(30)
-    }
-    
-}

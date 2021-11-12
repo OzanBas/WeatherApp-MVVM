@@ -10,50 +10,62 @@ import CoreLocation
 
 
 
-protocol MainControllerProtocol {
-    func userDidAskForData(for cityName: String)
-}
-
-
 class MainController: UIViewController {
 
     //MARK: - Properties
     
     
-    var delegate: MainControllerProtocol?
+    
+    
+    var mainDelegate: MainScreenProtocol?
+    var detailsDelegate: DetailsScreenProtocol?
     var locationManager = CLLocationManager()
-    
-    
+    var deviceLat : String?
+    var deviceLon : String?
     
     let backgroundImage : UIImageView = {
         let image = UIImageView()
         return image
     }()
+    
+    let appLogoLabel : UILabel = {
+        let label = UILabel()
+        label.setDimensions(height: 50, width: 200)
+        label.layer.cornerRadius = 25
+        label.backgroundColor = .init(white: 1, alpha: 0.2)
+        label.text = "WeatherApp©"
+        label.font = .boldSystemFont(ofSize: 22)
+        label.textColor = .init(white: 1, alpha: 0.8)
+        label.textAlignment = .center
+        label.clipsToBounds = true
+        return label
+    }()
 
-    let currentWeatherView : UIView = {
+    let currentViewCard : UIView = {
         let view = UIView()
         view.setHeight(180)
-        view.backgroundColor = .init(white: 1, alpha: 0.2)
+        view.backgroundColor = .init(white: 1, alpha: 0.1)
         view.layer.cornerRadius = 10
         return view
     }()
     
-    let forecastWeatherView : UIView = {
+    let forecastViewCard : UIView = {
         let view = UIView()
-        view.backgroundColor = .init(white: 1, alpha: 0.2)
+        view.backgroundColor = .init(white: 1, alpha: 0.1)
         view.layer.cornerRadius = 10
         view.setHeight(320)
         return view
     }()
     
     
-    let requestField : UITextField = {
+    let requestTextField : UITextField = {
        let field = UITextField()
         field.borderStyle = .roundedRect
         field.returnKeyType = .go
         field.backgroundColor = .white
         field.setHeight(50)
         field.placeholder = " Search City or State"
+        
         return field
     }()
     
@@ -62,8 +74,8 @@ class MainController: UIViewController {
         label.font = .boldSystemFont(ofSize: 36)
         label.textColor = .white
         label.setDimensions(height: 50, width: 150)
-        label.text = "Location"
         label.textAlignment = .left
+        label.adjustsFontSizeToFitWidth = true
         return label
     }()
     
@@ -72,7 +84,6 @@ class MainController: UIViewController {
          label.font = .boldSystemFont(ofSize: 36)
          label.textColor = .white
          label.setDimensions(height: 50, width: 120)
-         label.text = "Temperature"
          label.textAlignment = .center
          return label
     }()
@@ -82,8 +93,6 @@ class MainController: UIViewController {
         image.setDimensions(height: 100, width: 100)
         image.layer.cornerRadius = 80 / 2
         image.tintColor = .white
-        image.image = UIImage(systemName: "square.and.arrow.down")
-        
         return image
     }()
     
@@ -92,9 +101,8 @@ class MainController: UIViewController {
         label.font = .systemFont(ofSize: 20)
         label.textColor = .init(white: 1, alpha: 0.7)
         label.setDimensions(height: 60, width: 130)
-        label.text = "Description"
         label.textAlignment = .left
-        label.numberOfLines = 0
+        label.adjustsFontSizeToFitWidth = true
         return label
     }()
     
@@ -106,136 +114,184 @@ class MainController: UIViewController {
         button.tintColor = .white
         button.setImage(UIImage(systemName: "location.circle.fill"), for: .normal)
         button.imageView?.setDimensions(height: 35, width: 40)
+            button.addTarget(self, action: #selector(locationButtonTapped), for: .touchUpInside)
         return button
     }()
 
+    let currentCardButton : UIButton = {
+        let button = UIButton(type: .system)
+        button.addTarget(self, action: #selector(currentCardButtonTapped), for: .touchUpInside)
+        return button
+    }()
     
-    let firstLabel : UILabel = {
+    
+    let firstDayLabel : UILabel = {
         let label = UILabel()
-        label.configureDayLabel(display: "Label")
+        label.configureDayLabel(display: "")
         return label
     }()
     
-    let secondLabel : UILabel = {
+    let secondDayLabel : UILabel = {
         let label = UILabel()
-        label.configureDayLabel(display: "Label")
+        label.configureDayLabel(display: "")
         return label
     }()
     
-    let thirdLabel : UILabel = {
+    let thirdDayLabel : UILabel = {
         let label = UILabel()
-        label.configureDayLabel(display: "Label")
+        label.configureDayLabel(display: "")
         return label
     }()
     
-    let fourthLabel : UILabel = {
+    let fourthDayLabel : UILabel = {
         let label = UILabel()
-        label.configureDayLabel(display: "Label")
+        label.configureDayLabel(display: "")
         return label
     }()
     
-    let fifthLabel : UILabel = {
+    let fifthDayLabel : UILabel = {
         let label = UILabel()
-        label.configureDayLabel(display: "Label")
+        label.configureDayLabel(display: "")
         return label
     }()
     
-    let sixthLabel : UILabel = {
+    let sixthDayLabel : UILabel = {
         let label = UILabel()
-        label.configureDayLabel(display: "Label")
+        label.configureDayLabel(display: "")
         return label
     }()
     
-    let seventhLabel : UILabel = {
+    let seventhDayLabel : UILabel = {
         let label = UILabel()
-        label.configureDayLabel(display: "Label")
+        label.configureDayLabel(display: "")
         return label
     }()
     
-    let firstImage : UIImageView = {
+    let firstDayImage : UIImageView = {
         let image = UIImageView()
-        image.configureDayImage()
         return image
     }()
     
-    let secondImage : UIImageView = {
+    let secondDayImage : UIImageView = {
         let image = UIImageView()
-        image.configureDayImage()
         return image
     }()
     
-    let thirdImage : UIImageView = {
+    let thirdDayImage : UIImageView = {
         let image = UIImageView()
-        image.configureDayImage()
         return image
     }()
     
-    let fourthImage : UIImageView = {
+    let fourthDayImage : UIImageView = {
         let image = UIImageView()
-        image.configureDayImage()
         return image
     }()
     
-    let fifthImage : UIImageView = {
+    let fifthDayImage : UIImageView = {
         let image = UIImageView()
-        image.configureDayImage()
         return image
     }()
     
-    let sixthImage : UIImageView = {
+    let sixthDayImage : UIImageView = {
         let image = UIImageView()
-        image.configureDayImage()
         return image
     }()
     
-    let seventhImage : UIImageView = {
+    let seventhDayImage : UIImageView = {
         let image = UIImageView()
-        image.configureDayImage()
         return image
     }()
     
-    let firstTempLabel : UILabel = {
+    let firstMaxTempLabel : UILabel = {
         let label = UILabel()
-        label.configureDayTemp(display: "0")
+        label.configureDayTemp(display: "")
         return label
     }()
     
-    let secondTempLabel : UILabel = {
+    let secondMaxTempLabel : UILabel = {
         let label = UILabel()
-        label.configureDayTemp(display: "0")
+        label.configureDayTemp(display: "")
         return label
     }()
     
-    let thirdTempLabel : UILabel = {
+    let thirdMaxTempLabel : UILabel = {
         let label = UILabel()
-        label.configureDayTemp(display: "0")
+        label.configureDayTemp(display: "")
         return label
     }()
     
-    let fourthTempLabel : UILabel = {
+    let fourthMaxTempLabel : UILabel = {
         let label = UILabel()
-        label.configureDayTemp(display: "0")
+        label.configureDayTemp(display: "")
         return label
     }()
     
-    let fifthTempLabel : UILabel = {
+    let fifthMaxTempLabel : UILabel = {
         let label = UILabel()
-        label.configureDayTemp(display: "0")
+        label.configureDayTemp(display: "")
         return label
     }()
     
-    let sixthTempLabel : UILabel = {
+    let sixthMaxTempLabel : UILabel = {
         let label = UILabel()
-        label.configureDayTemp(display: "0")
+        label.configureDayTemp(display: "")
         return label
     }()
     
-    let seventhTempLabel : UILabel = {
+    let seventhMaxTempLabel : UILabel = {
         let label = UILabel()
-        label.configureDayTemp(display: "0")
+        label.configureDayTemp(display: "")
         return label
     }()
     
+    let firstMinTempLabel : UILabel = {
+        let label = UILabel()
+        label.configureDayTemp(display: "")
+        label.textColor = .init(white: 1, alpha: 0.6)
+        return label
+    }()
+    
+    let secondMinTempLabel : UILabel = {
+        let label = UILabel()
+        label.configureDayTemp(display: "")
+        label.textColor = .init(white: 1, alpha: 0.6)
+        return label
+    }()
+    
+    let thirdMinTempLabel : UILabel = {
+        let label = UILabel()
+        label.configureDayTemp(display: "")
+        label.textColor = .init(white: 1, alpha: 0.6)
+        return label
+    }()
+    
+    let fourthMinTempLabel : UILabel = {
+        let label = UILabel()
+        label.configureDayTemp(display: "")
+        label.textColor = .init(white: 1, alpha: 0.6)
+        return label
+    }()
+    
+    let fifthMinTempLabel : UILabel = {
+        let label = UILabel()
+        label.configureDayTemp(display: "")
+        label.textColor = .init(white: 1, alpha: 0.6)
+        return label
+    }()
+    
+    let sixthMinTempLabel : UILabel = {
+        let label = UILabel()
+        label.configureDayTemp(display: "")
+        label.textColor = .init(white: 1, alpha: 0.6)
+        return label
+    }()
+    
+    let seventhMinTempLabel : UILabel = {
+        let label = UILabel()
+        label.configureDayTemp(display: "")
+        label.textColor = .init(white: 1, alpha: 0.6)
+        return label
+    }()
     
     //MARK: - LifeCycle
     
@@ -257,13 +313,26 @@ class MainController: UIViewController {
         view.addGestureRecognizer(tap)
     }
         
+    //MARK: - Actions
     
+    @objc func locationButtonTapped() {
+        mainDelegate?.firstTimeLocationUpdate(lat: deviceLat ?? "", Lon: deviceLon ?? "")
+    }
 
+    @objc func currentCardButtonTapped() {
+        print("DEBUG: Button Tapped.")
+        detailsDelegate?.userDidAskForDetails()
+    }
+    
+    @objc func dismissKeyboard() {
+        view.endEditing(true)
+        requestTextField.endEditing(true)
+    }
+    
     
     //MARK: - Helpers
     
 
-    
     func configureUI() {
         
         let gradient = CAGradientLayer()
@@ -273,7 +342,7 @@ class MainController: UIViewController {
         view.layer.addSublayer(gradient)
         gradient.frame = view.frame
         
-        requestField.delegate = self
+        requestTextField.delegate = self
         
         view.addSubview(backgroundImage)
         backgroundImage.frame = view.frame
@@ -282,109 +351,113 @@ class MainController: UIViewController {
         view.addSubview(locationButton)
         locationButton.anchor(top: view.safeAreaLayoutGuide.topAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 40, paddingRight: 22)
         
-        view.addSubview(requestField)
-        requestField.centerX(inView: view)
-        requestField.anchor(top: view.safeAreaLayoutGuide.topAnchor, left: view.leftAnchor, right: locationButton.leftAnchor,
+        view.addSubview(requestTextField)
+        requestTextField.centerX(inView: view)
+        requestTextField.anchor(top: view.safeAreaLayoutGuide.topAnchor, left: view.leftAnchor, right: locationButton.leftAnchor,
         paddingTop: 40, paddingLeft: 30, paddingRight: 10)
         
-        view.addSubview(currentWeatherView)
-        currentWeatherView.centerX(inView: view)
-        currentWeatherView.anchor(top: requestField.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 40, paddingLeft: 22, paddingRight: 22)
+        view.addSubview(currentViewCard)
+        currentViewCard.centerX(inView: view)
+        currentViewCard.anchor(top: requestTextField.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 32, paddingLeft: 22, paddingRight: 22)
 
-        view.addSubview(forecastWeatherView)
-        forecastWeatherView.centerX(inView: view)
-        forecastWeatherView.anchor(top: currentWeatherView.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 22, paddingLeft: 22, paddingRight: 22)
+        view.addSubview(forecastViewCard)
+        forecastViewCard.centerX(inView: view)
+        forecastViewCard.anchor(top: currentViewCard.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 20, paddingLeft: 22, paddingRight: 22)
         
         
-        currentWeatherView.addSubview(cityNameLabel)
-        cityNameLabel.anchor(top:currentWeatherView.topAnchor, left: currentWeatherView.leftAnchor, paddingTop: 22 ,paddingLeft: 22)
+        currentViewCard.addSubview(cityNameLabel)
+        cityNameLabel.anchor(top:currentViewCard.topAnchor, left: currentViewCard.leftAnchor, paddingTop: 22 ,paddingLeft: 22)
         
-        currentWeatherView.addSubview(temperatureLabel)
-        temperatureLabel.anchor(top: currentWeatherView.topAnchor, right: currentWeatherView.rightAnchor, paddingTop: 22, paddingRight: 10)
+        currentViewCard.addSubview(temperatureLabel)
+        temperatureLabel.anchor(top: currentViewCard.topAnchor, right: currentViewCard.rightAnchor, paddingTop: 22, paddingRight: 10)
         
         
-        currentWeatherView.addSubview(weatherImage)
-        weatherImage.anchor(bottom: currentWeatherView.bottomAnchor, right: currentWeatherView.rightAnchor ,paddingBottom: 10, paddingRight: 22)
+        currentViewCard.addSubview(weatherImage)
+        weatherImage.anchor(bottom: currentViewCard.bottomAnchor, right: currentViewCard.rightAnchor ,paddingBottom: 10, paddingRight: 22)
         
-        currentWeatherView.addSubview(descriptionLabel)
-        descriptionLabel.anchor(left: currentWeatherView.leftAnchor, bottom: currentWeatherView.bottomAnchor, right: weatherImage.leftAnchor, paddingLeft: 24, paddingBottom: 32, paddingRight: 10)
+        currentViewCard.addSubview(descriptionLabel)
+        descriptionLabel.anchor(left: currentViewCard.leftAnchor, bottom: currentViewCard.bottomAnchor, right: weatherImage.leftAnchor, paddingLeft: 24, paddingBottom: 32, paddingRight: 10)
         
-        let daysStackView = UIStackView(arrangedSubviews: [firstLabel,secondLabel,thirdLabel,fourthLabel,fifthLabel,sixthLabel,seventhLabel])
-        daysStackView.distribution = .equalCentering
-        daysStackView.axis = .vertical
-        daysStackView.spacing = 10
-        daysStackView.setWidth(120)
+        currentViewCard.addSubview(currentCardButton)
+        currentCardButton.anchor(top:currentViewCard.topAnchor, left: currentViewCard.leftAnchor,
+                                 bottom: currentViewCard.bottomAnchor, right: currentViewCard.rightAnchor)
         
-        let imagesStackView = UIStackView(arrangedSubviews: [firstImage,secondImage,thirdImage,fourthImage,fifthImage,sixthImage,seventhImage])
-        imagesStackView.distribution = .equalCentering
-        imagesStackView.axis = .vertical
-        imagesStackView.spacing = 10
-        imagesStackView.setWidth(50)
+                
+        let firstDayStackView = UIStackView(arrangedSubviews: [firstDayLabel,firstDayImage,firstMaxTempLabel,firstMinTempLabel ])
+        firstDayStackView.axis = .horizontal
         
-        let tempStackView = UIStackView(arrangedSubviews: [firstTempLabel,secondTempLabel,thirdTempLabel,fourthTempLabel,fifthTempLabel,sixthTempLabel,seventhTempLabel])
-        tempStackView.distribution = .equalCentering
-        tempStackView.axis = .vertical
-        tempStackView.spacing = 10
-        tempStackView.setWidth(50)
+        let secondDayStackView = UIStackView(arrangedSubviews: [secondDayLabel,secondDayImage,secondMaxTempLabel,secondMinTempLabel ])
+        firstDayStackView.axis = .horizontal
+        
+        let thirdDayStackView = UIStackView(arrangedSubviews: [thirdDayLabel,thirdDayImage,thirdMaxTempLabel,thirdMinTempLabel ])
+        firstDayStackView.axis = .horizontal
+        
+        let fourthDayStackView = UIStackView(arrangedSubviews: [fourthDayLabel,fourthDayImage,fourthMaxTempLabel,fourthMinTempLabel ])
+        firstDayStackView.axis = .horizontal
+        
+        let fifthDayStackView = UIStackView(arrangedSubviews: [fifthDayLabel,fifthDayImage,fifthMaxTempLabel,fifthMinTempLabel ])
+        firstDayStackView.axis = .horizontal
+        
+        let sixthDayStackView = UIStackView(arrangedSubviews: [sixthDayLabel,sixthDayImage,sixthMaxTempLabel,sixthMinTempLabel ])
+        firstDayStackView.axis = .horizontal
+        
+        let seventhDayStackView = UIStackView(arrangedSubviews: [seventhDayLabel,seventhDayImage,seventhMaxTempLabel,seventhMinTempLabel ])
+        firstDayStackView.axis = .horizontal
+        
+        let forecastStackView = UIStackView(arrangedSubviews: [firstDayStackView,secondDayStackView,thirdDayStackView,fourthDayStackView,fifthDayStackView,sixthDayStackView,seventhDayStackView])
+        forecastStackView.axis = .vertical
+        forecastStackView.distribution = .fillEqually
+        
 
-        let infoStackView = UIStackView(arrangedSubviews: [imagesStackView, tempStackView])
-        infoStackView.spacing = 20
-        infoStackView.axis = .horizontal
-        infoStackView.distribution = .equalCentering
         
-        forecastWeatherView.addSubview(daysStackView)
-        daysStackView.anchor(top: forecastWeatherView.topAnchor, left: forecastWeatherView.leftAnchor, bottom: forecastWeatherView.bottomAnchor,paddingTop: 15,paddingLeft: 20,paddingBottom: 15)
-        
-        forecastWeatherView.addSubview(infoStackView)
-        infoStackView.anchor(top: forecastWeatherView.topAnchor, bottom: forecastWeatherView.bottomAnchor,
-                             right: forecastWeatherView.rightAnchor, paddingTop: 15, paddingBottom: 15, paddingRight: 20)
+        forecastViewCard.addSubview(forecastStackView)
+        forecastStackView.anchor(top: forecastViewCard.topAnchor, left: forecastViewCard.leftAnchor, bottom: forecastViewCard.bottomAnchor, right: forecastViewCard.rightAnchor, paddingTop: 15, paddingLeft: 20, paddingBottom: 15, paddingRight: 20)
         
         
         
-        
-        
-        
+        view.addSubview(appLogoLabel)
+        appLogoLabel.centerX(inView: view)
+        appLogoLabel.anchor(top:forecastViewCard.bottomAnchor, paddingTop: 20)
     }
     
-    @objc func dismissKeyboard() {
-        view.endEditing(true)
-        requestField.endEditing(true)
-    }
+    
+
 }
 
 //MARK: - Extensions
 
 extension MainController: UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        return requestField.endEditing(true)
+        return requestTextField.endEditing(true)
     }
     
     func textFieldDidEndEditing(_ textField: UITextField) {
                 
-        guard let userText = requestField.text?.lowercased() else { return }
+        guard let userText = requestTextField.text?.lowercased() else { return }
         
         let cityName = userText.replacingOccurrences(of: " ", with: "-")
         
         print("DEBUG: cityName: \(cityName)")
-        delegate?.userDidAskForData(for: cityName)
-        requestField.text = ""
+        mainDelegate?.userDidAskForData(for: cityName)
+        requestTextField.text = ""
     }
 }
 
 extension MainController: CLLocationManagerDelegate {
-        
-    
-
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         if let location = locations.first {
             let latitude = location.coordinate.latitude
             let longitude = location.coordinate.longitude
-            print("\(latitude), \(longitude)")
+            deviceLat = String(latitude)
+            deviceLon = String(longitude)
+            
+            print("\(deviceLat ?? ""), \(deviceLon ?? "")")
+            mainDelegate?.firstTimeLocationUpdate(lat: deviceLat ?? "", Lon: deviceLon ?? "")
+            
         }
     }
 
-    
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print("DEBUG: Location fetch failed. -> \(error.localizedDescription)")
     }
