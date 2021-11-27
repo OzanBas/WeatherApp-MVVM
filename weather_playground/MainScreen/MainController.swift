@@ -14,11 +14,25 @@ class MainController: UIViewController {
 
     //MARK: - Properties
     
+    let deviceHeight = UIScreen.main.bounds.height
+    let deviceWidth = UIScreen.main.bounds.width
+    var sizeAdjuster : Float {
+        switch deviceHeight {
+        case 800...900:
+            return 1
+        case 700...799:
+            return 0.82
+        case 600...699:
+            return 0.74
+        case 500...599:
+            return 0.63
+        default:
+            return 1
+        }
+    }
     
-    
-    
+    var detailVM = DetailsViewModel()
     var mainDelegate: MainScreenProtocol?
-    var detailsDelegate: DetailsScreenProtocol?
     var locationManager = CLLocationManager()
     var deviceLat : String?
     var deviceLon : String?
@@ -27,33 +41,32 @@ class MainController: UIViewController {
         let image = UIImageView()
         return image
     }()
-    
+
     let appLogoLabel : UILabel = {
         let label = UILabel()
-        label.setDimensions(height: 50, width: 200)
-        label.layer.cornerRadius = 25
-        label.backgroundColor = .init(white: 1, alpha: 0.2)
+        label.setDimensions(height: UIScreen.main.bounds.height / 18 , width: UIScreen.main.bounds.height / 4.5)
+        label.layer.cornerRadius = UIScreen.main.bounds.height / 36
+        label.backgroundColor = .init(red: 8/255, green: 32/255, blue: 50/255, alpha: 0.3)
         label.text = "WeatherApp©"
-        label.font = .boldSystemFont(ofSize: 22)
+        label.font = .boldSystemFont(ofSize: UIScreen.main.bounds.height / 40)
         label.textColor = .init(white: 1, alpha: 0.8)
         label.textAlignment = .center
         label.clipsToBounds = true
         return label
     }()
-
     let currentViewCard : UIView = {
         let view = UIView()
-        view.setHeight(180)
-        view.backgroundColor = .init(white: 1, alpha: 0.1)
+        view.setHeight(UIScreen.main.bounds.height / 5)
+        view.backgroundColor = .init(red: 8/255, green: 32/255, blue: 50/255, alpha: 0.3)
         view.layer.cornerRadius = 10
         return view
     }()
     
     let forecastViewCard : UIView = {
         let view = UIView()
-        view.backgroundColor = .init(white: 1, alpha: 0.1)
+        view.backgroundColor = .init(red: 8/255, green: 32/255, blue: 50/255, alpha: 0.3)
         view.layer.cornerRadius = 10
-        view.setHeight(320)
+        view.setHeight(UIScreen.main.bounds.height / 2.4)
         return view
     }()
     
@@ -63,7 +76,8 @@ class MainController: UIViewController {
         field.borderStyle = .roundedRect
         field.returnKeyType = .go
         field.backgroundColor = .white
-        field.setHeight(50)
+        field.setHeight(20 + UIScreen.main.bounds.height / 30)
+        field.tintColor = .black
         field.placeholder = " Search City or State"
         
         return field
@@ -71,36 +85,35 @@ class MainController: UIViewController {
     
     let cityNameLabel : UILabel = {
        let label = UILabel()
-        label.font = .boldSystemFont(ofSize: 36)
+        label.font = .boldSystemFont(ofSize: UIScreen.main.bounds.height / 25)
         label.textColor = .white
-        label.setDimensions(height: 50, width: 150)
         label.textAlignment = .left
         label.adjustsFontSizeToFitWidth = true
+
         return label
     }()
     
     let temperatureLabel : UILabel = {
         let label = UILabel()
-         label.font = .boldSystemFont(ofSize: 36)
+        label.font = .boldSystemFont(ofSize: UIScreen.main.bounds.height / 25)
          label.textColor = .white
-         label.setDimensions(height: 50, width: 120)
          label.textAlignment = .center
+         label.adjustsFontSizeToFitWidth = true
          return label
     }()
     
     let weatherImage : UIImageView = {
         let image = UIImageView()
-        image.setDimensions(height: 100, width: 100)
-        image.layer.cornerRadius = 80 / 2
+        image.contentMode = .scaleAspectFit
         image.tintColor = .white
+        image.setDimensions(height: UIScreen.main.bounds.width / 4, width: UIScreen.main.bounds.width / 4)
         return image
     }()
     
     let descriptionLabel : UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 20)
-        label.textColor = .init(white: 1, alpha: 0.7)
-        label.setDimensions(height: 60, width: 130)
+        label.font = .systemFont(ofSize: 10 + UIScreen.main.bounds.height / 96)
+        label.textColor = .white
         label.textAlignment = .left
         label.adjustsFontSizeToFitWidth = true
         return label
@@ -108,12 +121,12 @@ class MainController: UIViewController {
     
     let locationButton : UIButton = {
         let button = UIButton(type: .system)
-        button.setDimensions(height: 50, width: 50)
-        button.layer.cornerRadius = 50 / 2
+        button.setDimensions(height: 40, width: 40)
+        button.layer.cornerRadius = 40 / 2
         button.backgroundColor = .init(white: 1, alpha: 0.2)
         button.tintColor = .white
         button.setImage(UIImage(systemName: "location.circle.fill"), for: .normal)
-        button.imageView?.setDimensions(height: 35, width: 40)
+        button.imageView?.setDimensions(height: 30, width: 35)
             button.addTarget(self, action: #selector(locationButtonTapped), for: .touchUpInside)
         return button
     }()
@@ -297,6 +310,7 @@ class MainController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.view.isHidden = true
         self.locationManager.requestAlwaysAuthorization()
 
         self.locationManager.requestWhenInUseAuthorization()
@@ -316,12 +330,11 @@ class MainController: UIViewController {
     //MARK: - Actions
     
     @objc func locationButtonTapped() {
-        mainDelegate?.firstTimeLocationUpdate(lat: deviceLat ?? "", Lon: deviceLon ?? "")
+        mainDelegate?.userDidAskLocationData(lat: deviceLat ?? "", Lon: deviceLon ?? "")
     }
 
-    @objc func currentCardButtonTapped() {
-        print("DEBUG: Button Tapped.")
-        detailsDelegate?.userDidAskForDetails()
+    @objc func currentCardButtonTapped() {        
+        mainDelegate?.cardButtonTapped()
     }
     
     @objc func dismissKeyboard() {
@@ -353,30 +366,36 @@ class MainController: UIViewController {
         
         view.addSubview(requestTextField)
         requestTextField.centerX(inView: view)
+        requestTextField.centerY(inView: locationButton)
         requestTextField.anchor(top: view.safeAreaLayoutGuide.topAnchor, left: view.leftAnchor, right: locationButton.leftAnchor,
         paddingTop: 40, paddingLeft: 30, paddingRight: 10)
         
+        
         view.addSubview(currentViewCard)
         currentViewCard.centerX(inView: view)
-        currentViewCard.anchor(top: requestTextField.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 32, paddingLeft: 22, paddingRight: 22)
+        currentViewCard.anchor(top: requestTextField.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 15, paddingLeft: 15, paddingRight: 15)
 
         view.addSubview(forecastViewCard)
         forecastViewCard.centerX(inView: view)
-        forecastViewCard.anchor(top: currentViewCard.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 20, paddingLeft: 22, paddingRight: 22)
+        forecastViewCard.anchor(top: currentViewCard.bottomAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, paddingTop: 15, paddingLeft: 15, paddingRight: 15)
         
         
         currentViewCard.addSubview(cityNameLabel)
-        cityNameLabel.anchor(top:currentViewCard.topAnchor, left: currentViewCard.leftAnchor, paddingTop: 22 ,paddingLeft: 22)
-        
-        currentViewCard.addSubview(temperatureLabel)
-        temperatureLabel.anchor(top: currentViewCard.topAnchor, right: currentViewCard.rightAnchor, paddingTop: 22, paddingRight: 10)
+        cityNameLabel.anchor(top:currentViewCard.topAnchor, left: currentViewCard.leftAnchor, paddingTop: UIScreen.main.bounds.height / 28 ,paddingLeft: 22)
+ 
+
         
         
         currentViewCard.addSubview(weatherImage)
-        weatherImage.anchor(bottom: currentViewCard.bottomAnchor, right: currentViewCard.rightAnchor ,paddingBottom: 10, paddingRight: 22)
+        weatherImage.anchor(bottom: currentViewCard.bottomAnchor, right: currentViewCard.rightAnchor , paddingBottom: 0, paddingRight: 22)
+        
+        
+        currentViewCard.addSubview(temperatureLabel)
+        temperatureLabel.anchor(top: currentViewCard.topAnchor, paddingTop: UIScreen.main.bounds.height / 28)
+        temperatureLabel.centerX(inView: weatherImage)
         
         currentViewCard.addSubview(descriptionLabel)
-        descriptionLabel.anchor(left: currentViewCard.leftAnchor, bottom: currentViewCard.bottomAnchor, right: weatherImage.leftAnchor, paddingLeft: 24, paddingBottom: 32, paddingRight: 10)
+        descriptionLabel.anchor(left: currentViewCard.leftAnchor, bottom: currentViewCard.bottomAnchor, right: weatherImage.leftAnchor, paddingLeft: 22, paddingBottom: UIScreen.main.bounds.height / 28, paddingRight: 10)
         
         currentViewCard.addSubview(currentCardButton)
         currentCardButton.anchor(top:currentViewCard.topAnchor, left: currentViewCard.leftAnchor,
@@ -417,7 +436,7 @@ class MainController: UIViewController {
         
         view.addSubview(appLogoLabel)
         appLogoLabel.centerX(inView: view)
-        appLogoLabel.anchor(top:forecastViewCard.bottomAnchor, paddingTop: 20)
+        appLogoLabel.anchor(top:forecastViewCard.bottomAnchor, paddingTop: 15)
     }
     
     
@@ -438,7 +457,8 @@ extension MainController: UITextFieldDelegate {
         let cityName = userText.replacingOccurrences(of: " ", with: "-")
         
         print("DEBUG: cityName: \(cityName)")
-        mainDelegate?.userDidAskForData(for: cityName)
+        mainDelegate?.userDidAskCityData(for: cityName)
+        mainDelegate?.userDidAskCityHourly(for: cityName)
         requestTextField.text = ""
     }
 }
@@ -453,8 +473,8 @@ extension MainController: CLLocationManagerDelegate {
             deviceLon = String(longitude)
             
             print("\(deviceLat ?? ""), \(deviceLon ?? "")")
-            mainDelegate?.firstTimeLocationUpdate(lat: deviceLat ?? "", Lon: deviceLon ?? "")
-            
+            mainDelegate?.userDidAskLocationData(lat: deviceLat ?? "", Lon: deviceLon ?? "")
+            mainDelegate?.userDidAskLocationHourly(lat: deviceLat ?? "", Lon: deviceLon ?? "")
         }
     }
 

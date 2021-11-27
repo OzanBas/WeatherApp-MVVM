@@ -15,12 +15,17 @@ struct CurrentWeatherModel : Decodable {
     let wind: WindModel
     let visibility: Int
     let sys: SysModel
+    let clouds: CloudsModel
+}
 
+
+struct CloudsModel : Decodable {
+    let all: Double
 }
 
 struct WindModel : Decodable{
     let speed : Double
-    let deg : Double
+    var deg : Double
     
     var windDirection: String {
         switch deg {
@@ -66,7 +71,7 @@ struct WindModel : Decodable{
 
 struct TemperatureModel: Decodable {
     let temp : Double
-    let feels_like: Double
+    let feels_like : Double
     let temp_min : Double
     let temp_max : Double
     let pressure : Double

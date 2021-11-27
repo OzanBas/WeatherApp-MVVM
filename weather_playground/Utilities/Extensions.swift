@@ -150,7 +150,10 @@ extension UIImageView {
         self.image = UIImage(imageLiteralResourceName: picSelector())
     }
     
-    
+    func configureHourImage(){
+        contentMode = .scaleAspectFit
+//        setDimensions(height: 30, width: 30)
+    }
 }
 
 
@@ -158,32 +161,49 @@ extension UIImageView {
 
 extension UILabel {
     
+    func sliceTime(dt: String) {
+        let dt2 = dt.dropLast(3)
+        let dt3 = dt2.suffix(5)
+        self.text = String(dt3)
+    }
+    
+    func configureHourLabel() {
+        font = .boldSystemFont(ofSize: 10 + UIScreen.main.bounds.height / 224)
+        textColor = .white
+    }
+    
+    func configureHourTemp() {
+        font = .boldSystemFont(ofSize: 10 + UIScreen.main.bounds.height / 224)
+        textColor = .white
+    }
+    
     func configureDayLabel(display: String) {
         textColor = .init(white: 1, alpha: 1)
-        font = .systemFont(ofSize: 18)
+        font = .systemFont(ofSize: 10 + UIScreen.main.bounds.height / 100)
         setWidth(120)
         text = display
     }
     
     func configureDayTemp(display: String) {
-        font = .boldSystemFont(ofSize: 17)
+        font = .boldSystemFont(ofSize: 10 + (UIScreen.main.bounds.height / 130))
         textColor = .init(white: 1, alpha: 1)
         setWidth(50)
         textAlignment = .center
         text = display
     }
     
-    func formatTemperature(temp: Double) -> String {
+    func formatTemperature(temp: Double, starting: String, ending: String) {
         if temp < 100 {
             let formattedTemp = String(format: "%.1f", temp)
-            let newTemp = "\(formattedTemp)°"
-            return newTemp
+            let newTemp = "\(starting) \(formattedTemp)° \(ending)"
+            self.text = newTemp
         } else {
             let converted = temp - 273.2
             let formattedTemp = String(format: "%.1f", converted)
-            let newTemp = "\(formattedTemp)°"
-            return newTemp
+            let newTemp = "\(starting) \(formattedTemp)° \(ending)"
+            self.text = newTemp
         }
     }
 }
+
 
